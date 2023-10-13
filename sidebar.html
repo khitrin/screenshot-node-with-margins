@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<head>
+    <style>
+        .scale-down {
+            transform: scale(0.5);
+            transform-origin: top left;
+        }
+    </style>
+</head>
+<body>
+<button id="capture">Capture</button>
+<select id="margin">
+    <option value="4">margin 4px</option>
+    <option value="8">margin 8px</option>
+    <option value="16">margin 16px</option>
+    <option value="32">margin 32px</option>
+</select>
+<select id="shadow">
+    <option value="original">original shadow</option>
+    <option value="none">no shadow</option>
+    <option value="elevation1">elevation 1</option>
+    <option value="elevation2">elevation 2</option>
+    <option value="elevation4">elevation 4</option>
+    <option value="elevation8">elevation 8</option>
+    <option value="black1">1px black border</option>
+    <option value="black2">2px black border</option>
+    <option value="grey1">1px grey border</option>
+    <option value="grey2">2px grey border</option>
+</select>
+<label><input id="scaledown" type="checkbox"/>scale down preview</label>
+<label><input id="autodownload" type="checkbox"/>autodownload</label>
+<script src="sidebar.js"></script>
+<div id="element"></div>
+<!--<img id="img" style="border: 4px solid black; padding: 4px; scale: 0.5"/>-->
+<img id="img"/>
+</body>
+</html>
