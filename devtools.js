@@ -6,9 +6,61 @@ chrome.devtools.panels.elements.createSidebarPane(
       const port = chrome.runtime;
       port.onMessage.addListener(function (msg) {
         if (msg.type === "doScreenshot") {
-          step1(msg.margin, msg.shadow);
+          doScreenshot(msg.margin, msg.shadow);
         }
       });
+
+      async function doScreenshot(margin, shadow) {
+        try {
+          await chrome.debugger.attach({tabId: chrome.devtools.inspectedWindow.tabId}, "1.3");
+        } catch (error) {
+          // TODO: find out how to reliably detect is debugger attached or not on devtools reopen
+          if (!error.message.startsWith("Another debugger is already attached to the tab")) {
+            throw error; // TODO: pass error to user
+          }
+        }
+        try {
+          const {bbox, nodeStyle} =
+              await evalInWindow("(" + modifyNodeAndGetClip.toString() + ")(" + JSON.stringify(shadow) + ")");
+          try {
+            const x = Math.floor(bbox.x - margin);
+            const y = Math.floor(bbox.y - margin);
+            let width = Math.ceil(bbox.width + 2 * margin);
+            let height = Math.ceil(bbox.height + 2 * margin);
+
+            const img = await chrome.debugger.sendCommand(
+                {tabId: chrome.devtools.inspectedWindow.tabId},
+                "Page.captureScreenshot",
+                {
+                  format: "png",
+                  captureBeyondViewport: false,
+                  clip: {
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    scale: 1
+                  }
+                }
+            );
+            port.sendMessage({type: "img", data: img.data});
+          } finally {
+            await evalInWindow("(" + repairNode.toString() + ")(" + JSON.stringify(nodeStyle) + ")");
+          }
+        } catch (error) {
+          throw error; // TODO: pass error to user
+        }
+      }
+
+      function evalInWindow(code) {
+        return new Promise((resolve, reject) => chrome.devtools.inspectedWindow.eval(code, {}, (result, exceptionInfo) => {
+          if (exceptionInfo) {
+            reject(exceptionInfo.code + ": " + exceptionInfo.description);
+          } else {
+            resolve(result);
+          }
+        }));
+      }
 
       const modifyNodeAndGetClip = (shadow) => {
         const SHADOWS = {
@@ -53,50 +105,10 @@ chrome.devtools.panels.elements.createSidebarPane(
 
         const newStyle = (nodeStyle || "") + ";box-shadow:" + modShadow + extraStyle;
         $0.setAttribute("style", newStyle);
-        return JSON.stringify({bbox: el.getBoundingClientRect(), nodeStyle});
+
+        const bbox = el.getBoundingClientRect();
+        return {bbox: {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height}, nodeStyle};
       };
-
-      function step1(margin, shadow) {
-        chrome.devtools.inspectedWindow.eval("(" + modifyNodeAndGetClip.toString() + ")(" + JSON.stringify(shadow) + ")", {}, (res) => step2(res, margin));
-      }
-
-      function step2(res, margin) {
-        const bboxAndStyle = JSON.parse(res);
-        chrome.debugger.attach({tabId: chrome.devtools.inspectedWindow.tabId}, "1.3", function () {
-          let error = chrome.runtime.lastError;
-          // TODO: find out how to reliably detect is debugger attached or not on devtools reopen
-          if (error && !error.message.startsWith("Another debugger is already attached to the tab")) {
-            console.error("Error in extension", error);
-            return;
-          }
-          step3(bboxAndStyle, margin);
-        });
-      }
-
-      function step3(bboxAndStyle, margin) {
-        const bbox = bboxAndStyle.bbox;
-        const x = Math.floor(bbox.x - margin);
-        const y = Math.floor(bbox.y - margin);
-        let width = Math.ceil(bbox.width + 2 * margin);
-        let height = Math.ceil(bbox.height + 2 * margin);
-
-        chrome.debugger.sendCommand(
-            {tabId: chrome.devtools.inspectedWindow.tabId},
-            "Page.captureScreenshot",
-            {
-              format: "png",
-              captureBeyondViewport: false,
-              clip: {
-                x: x,
-                y: y,
-                width: width,
-                height: height,
-                scale: 1
-              }
-            },
-            (res) => step4(res, bboxAndStyle)
-        );
-      }
 
       const repairNode = (nodeStyle) => {
         const el = $0;
@@ -106,10 +118,5 @@ chrome.devtools.panels.elements.createSidebarPane(
           el.removeAttribute("style");
         }
       };
-
-      function step4(res, bboxAndStyle) {
-        port.sendMessage({type: "img", data: res.data});
-        chrome.devtools.inspectedWindow.eval("(" + repairNode.toString() + ")(" + JSON.stringify(bboxAndStyle.nodeStyle) + ")", {});
-      }
     }
 );
