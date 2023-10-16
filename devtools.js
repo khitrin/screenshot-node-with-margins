@@ -106,8 +106,12 @@ chrome.devtools.panels.elements.createSidebarPane(
         const newStyle = (nodeStyle || "") + ";box-shadow:" + modShadow + extraStyle;
         $0.setAttribute("style", newStyle);
 
-        const bbox = el.getBoundingClientRect();
-        return {bbox: {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height}, nodeStyle};
+        const elBbox = el.getBoundingClientRect();
+        const docBbox = el.ownerDocument.documentElement.getBoundingClientRect();
+        return {
+          bbox: {x: elBbox.x - docBbox.x, y: elBbox.y - docBbox.y, width: elBbox.width, height: elBbox.height},
+          nodeStyle
+        };
       };
 
       const repairNode = (nodeStyle) => {
