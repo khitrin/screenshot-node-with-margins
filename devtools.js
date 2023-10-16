@@ -57,7 +57,8 @@ chrome.devtools.panels.elements.createSidebarPane(
         const bboxAndStyle = JSON.parse(res);
         chrome.debugger.attach({tabId: chrome.devtools.inspectedWindow.tabId}, "1.3", function () {
           let error = chrome.runtime.lastError;
-          if (error) {
+          // TODO: find out how to reliably detect is debugger attached or not on devtools reopen
+          if (error && !error.message.startsWith("Another debugger is already attached to the tab")) {
             console.error("Error in extension", error);
             return;
           }
@@ -101,11 +102,7 @@ chrome.devtools.panels.elements.createSidebarPane(
 
       function step4(res, bboxAndStyle) {
         port.sendMessage({type: "img", data: res.data});
-        chrome.devtools.inspectedWindow.eval("(" + repairNode.toString() + ")(" + JSON.stringify(bboxAndStyle.nodeStyle) + ")", {}, step5);
-      }
-
-      function step5() {
-        chrome.debugger.detach({tabId: chrome.devtools.inspectedWindow.tabId});
+        chrome.devtools.inspectedWindow.eval("(" + repairNode.toString() + ")(" + JSON.stringify(bboxAndStyle.nodeStyle) + ")", {});
       }
     }
 );
