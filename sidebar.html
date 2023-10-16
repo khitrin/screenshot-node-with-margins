@@ -5,6 +5,15 @@
             width: unset !important;
             height: unset !important;
         }
+
+        .checker {
+            background: repeating-conic-gradient(#bbb 0 90deg, #eee 0 180deg) center center/16px 16px;
+        }
+
+        .img-wrap {
+            padding: 16px;
+            margin: 4px;
+        }
     </style>
 </head>
 <body>
@@ -30,7 +39,7 @@
 <label><input id="scaledown" type="checkbox" checked/>scale down preview</label>
 <label><input id="autodownload" type="checkbox"/>autodownload</label>
 <div id="element"></div>
-<img id="img"/>
+<img id="img" class="checker img-wrap"/>
 <script src="sidebar.js"></script>
 </body>
 </html>
