@@ -23,12 +23,19 @@ chrome.devtools.panels.elements.createSidebarPane(
         };
 
         const el = $0;
-        const nodeShadow = window.getComputedStyle(el).boxShadow;
+        const computedStyle = window.getComputedStyle(el);
+        const nodeShadow = computedStyle.boxShadow;
         const nodeStyle = $0.getAttribute("style");
 
         let modShadow;
         const bigWhiteShadow = "0 0 0 64px white !important";
-        const fixTransitionAndZIndex = ";transition: unset !important;z-index: 99999 !important";
+
+        let extraStyle = ";transition: unset !important;z-index: 99999 !important";
+
+        if (computedStyle.display === "inline") {
+          extraStyle += ";display:inline-block";
+        }
+
         switch (shadow) {
           case "original":
             if (nodeShadow !== "none") {
@@ -44,7 +51,7 @@ chrome.devtools.panels.elements.createSidebarPane(
             modShadow = SHADOWS[shadow] + "," + bigWhiteShadow;
         }
 
-        const newStyle = (nodeStyle || "") + ";box-shadow:" + modShadow + fixTransitionAndZIndex;
+        const newStyle = (nodeStyle || "") + ";box-shadow:" + modShadow + extraStyle;
         $0.setAttribute("style", newStyle);
         return JSON.stringify({bbox: el.getBoundingClientRect(), nodeStyle});
       };
