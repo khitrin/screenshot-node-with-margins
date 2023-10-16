@@ -14,6 +14,10 @@
             padding: 16px;
             margin: 4px;
         }
+
+        label {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -38,6 +42,9 @@
 </select>
 <label><input id="scaledown" type="checkbox" checked/>scale down preview</label>
 <label><input id="autodownload" type="checkbox"/>autodownload</label>
+<br/> force:
+<label><input id="forceParentOverflowVisible" type="checkbox"/>overflow:visible for parents</label>
+<label><input id="forcePositionRelative" type="checkbox"/>position:relative</label>
 <div id="element"></div>
 <img id="img" class="checker img-wrap"/>
 <script src="sidebar.js"></script>

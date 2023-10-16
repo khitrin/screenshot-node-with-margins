@@ -6,11 +6,11 @@ chrome.devtools.panels.elements.createSidebarPane(
       const port = chrome.runtime;
       port.onMessage.addListener(function (msg) {
         if (msg.type === "doScreenshot") {
-          doScreenshot(msg.margin, msg.shadow);
+          doScreenshot(msg.margin, msg.shadow, msg.forceParentOverflowVisible, msg.forcePositionRelative);
         }
       });
 
-      async function doScreenshot(margin, shadow) {
+      async function doScreenshot(margin, shadow, forceParentOverflowVisible, forcePositionRelative) {
         try {
           await chrome.debugger.attach({tabId: chrome.devtools.inspectedWindow.tabId}, "1.3");
         } catch (error) {
@@ -20,8 +20,12 @@ chrome.devtools.panels.elements.createSidebarPane(
           }
         }
         try {
-          const {bbox, nodeStyle} =
-              await evalInWindow("(" + modifyNodeAndGetClip.toString() + ")(" + JSON.stringify(shadow) + ")");
+          const {bbox, styles} =
+              await evalInWindow("(" + modifyNodeAndGetClip.toString() + ")(" +
+                  JSON.stringify(shadow) + "," +
+                  JSON.stringify(forceParentOverflowVisible) + "," +
+                  JSON.stringify(forcePositionRelative) + "," +
+                  ")");
           try {
             const x = Math.floor(bbox.x - margin);
             const y = Math.floor(bbox.y - margin);
@@ -45,7 +49,7 @@ chrome.devtools.panels.elements.createSidebarPane(
             );
             port.sendMessage({type: "img", data: img.data});
           } finally {
-            await evalInWindow("(" + repairNode.toString() + ")(" + JSON.stringify(nodeStyle) + ")");
+            await evalInWindow("(" + repairNodes.toString() + ")(" + JSON.stringify(styles) + ")");
           }
         } catch (error) {
           throw error; // TODO: pass error to user
@@ -55,14 +59,14 @@ chrome.devtools.panels.elements.createSidebarPane(
       function evalInWindow(code) {
         return new Promise((resolve, reject) => chrome.devtools.inspectedWindow.eval(code, {}, (result, exceptionInfo) => {
           if (exceptionInfo) {
-            reject(exceptionInfo.code + ": " + exceptionInfo.description);
+            reject(exceptionInfo.code + ": " + exceptionInfo.value);
           } else {
             resolve(result);
           }
         }));
       }
 
-      const modifyNodeAndGetClip = (shadow) => {
+      const modifyNodeAndGetClip = (shadow, forceParentOverflowVisible, forcePositionRelative) => {
         const SHADOWS = {
           "elevation1": "0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)",
           "elevation2": "0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12)",
@@ -85,7 +89,11 @@ chrome.devtools.panels.elements.createSidebarPane(
         let extraStyle = ";transition: unset !important;z-index: 99999 !important";
 
         if (computedStyle.display === "inline") {
-          extraStyle += ";display:inline-block";
+          extraStyle += ";display:inline-block !important";
+        }
+
+        if (forcePositionRelative) {
+          extraStyle += ";position: relative !important";
         }
 
         switch (shadow) {
@@ -108,18 +116,39 @@ chrome.devtools.panels.elements.createSidebarPane(
 
         const elBbox = el.getBoundingClientRect();
         const docBbox = el.ownerDocument.documentElement.getBoundingClientRect();
+
+        const styles = [nodeStyle];
+
+        if (forceParentOverflowVisible) {
+          let parent = el;
+
+          while (parent.parentNode && parent.parentNode instanceof HTMLElement) {
+            parent = parent.parentNode;
+            const parentStyle = parent.getAttribute("style");
+            styles.push(parentStyle);
+            let parentComputedStyle = window.getComputedStyle(parent);
+            if (parentComputedStyle.overflowX === "hidden" || parentComputedStyle.overflowY === "hidden") {
+              parent.setAttribute("style", (parentStyle || "") + ";overflow:visible !important");
+            }
+          }
+        }
+
         return {
           bbox: {x: elBbox.x - docBbox.x, y: elBbox.y - docBbox.y, width: elBbox.width, height: elBbox.height},
-          nodeStyle
+          styles
         };
       };
 
-      const repairNode = (nodeStyle) => {
-        const el = $0;
-        if (nodeStyle !== null) {
-          el.setAttribute("style", nodeStyle);
-        } else {
-          el.removeAttribute("style");
+      const repairNodes = (styles) => {
+        let el = $0;
+
+        for (const style of styles) {
+          if (style !== null) {
+            el.setAttribute("style", style);
+          } else {
+            el.removeAttribute("style");
+          }
+          el = el.parentNode;
         }
       };
     }

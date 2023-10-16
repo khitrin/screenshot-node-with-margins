@@ -18,7 +18,9 @@ port.onMessage.addListener(function (msg) {
 function onCapture() {
   const margin = document.getElementById("margin").value;
   const shadow = document.getElementById("shadow").value;
-  port.sendMessage({type: "doScreenshot", margin: margin, shadow: shadow});
+  const forceParentOverflowVisible = document.getElementById("forceParentOverflowVisible").checked;
+  const forcePositionRelative = document.getElementById("forcePositionRelative").checked;
+  port.sendMessage({type: "doScreenshot", margin: margin, shadow: shadow, forceParentOverflowVisible, forcePositionRelative});
 }
 
 function onScaleDown() {
