@@ -65,6 +65,11 @@ chrome.devtools.panels.elements.createSidebarPane(
 
       function step3(bboxAndStyle, margin) {
         const bbox = bboxAndStyle.bbox;
+        const x = Math.floor(bbox.x - margin);
+        const y = Math.floor(bbox.y - margin);
+        let width = Math.ceil(bbox.width + 2 * margin);
+        let height = Math.ceil(bbox.height + 2 * margin);
+
         chrome.debugger.sendCommand(
             {tabId: chrome.devtools.inspectedWindow.tabId},
             "Page.captureScreenshot",
@@ -72,10 +77,10 @@ chrome.devtools.panels.elements.createSidebarPane(
               format: "png",
               captureBeyondViewport: false,
               clip: {
-                x: bbox.x - margin,
-                y: bbox.y - margin,
-                width: bbox.width + 2 * margin,
-                height: bbox.height + 2 * margin,
+                x: x,
+                y: y,
+                width: width,
+                height: height,
                 scale: 1
               }
             },
