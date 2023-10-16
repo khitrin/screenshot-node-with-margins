@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <head>
     <style>
-        .scale-down {
-            transform: scale(0.5);
-            transform-origin: top left;
+        .no-scale-down {
+            width: unset !important;
+            height: unset !important;
         }
     </style>
 </head>
@@ -27,11 +27,10 @@
     <option value="grey1">1px grey border</option>
     <option value="grey2">2px grey border</option>
 </select>
-<label><input id="scaledown" type="checkbox"/>scale down preview</label>
+<label><input id="scaledown" type="checkbox" checked/>scale down preview</label>
 <label><input id="autodownload" type="checkbox"/>autodownload</label>
-<script src="sidebar.js"></script>
 <div id="element"></div>
-<!--<img id="img" style="border: 4px solid black; padding: 4px; scale: 0.5"/>-->
 <img id="img"/>
+<script src="sidebar.js"></script>
 </body>
 </html>

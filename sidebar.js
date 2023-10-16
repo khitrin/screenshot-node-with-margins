@@ -23,11 +23,18 @@ function onCapture() {
 
 function onScaleDown() {
   if (this.checked) {
-    document.getElementById("img").classList.add("scale-down");
+    document.getElementById("img").classList.remove("no-scale-down");
   } else {
-    document.getElementById("img").classList.remove("scale-down");
+    document.getElementById("img").classList.add("no-scale-down");
   }
+}
+
+function onImageLoad() {
+  this.style.width = (0.5 * this.naturalWidth) + "px";
+  this.style.height = (0.5 * this.naturalHeight) + "px";
 }
 
 document.getElementById("capture").onclick = onCapture;
 document.getElementById("scaledown").onchange = onScaleDown;
+
+document.getElementById("img").onload = onImageLoad;
