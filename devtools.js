@@ -33,6 +33,8 @@ chrome.devtools.panels.elements.createSidebarPane(
           case "original":
             if (nodeShadow !== "none") {
               modShadow = nodeShadow + "," + bigWhiteShadow;
+            } else {
+              modShadow = bigWhiteShadow;
             }
             break;
           case "none":
