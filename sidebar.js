@@ -38,5 +38,4 @@ function onImageLoad() {
 
 document.getElementById("capture").onclick = onCapture;
 document.getElementById("scaledown").onchange = onScaleDown;
-
 document.getElementById("img").onload = onImageLoad;
