@@ -1,5 +1,5 @@
 chrome.devtools.panels.elements.createSidebarPane(
-    "Screenshot node with margin",
+    "Screenshot node with margins",
     function (sidebar) {
       sidebar.setPage("sidebar.html");
 

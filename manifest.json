@@ -1,5 +1,5 @@
 {
-  "name": "Screenshot node with margin",
+  "name": "Screenshot node with margins",
   "version": "0.1",
   "description": "Adds a sidebar to screenshot selected node with margins and shadows",
   "devtools_page": "devtools.html",
