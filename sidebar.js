@@ -8,7 +8,7 @@ port.onMessage.addListener(function (msg) {
 
     if (document.getElementById("autodownload").checked) {
       const link = document.createElement("a");
-      link.download = "node.png";
+      link.download = "node_screenshot.png";
       link.href = val;
       link.click();
     }
